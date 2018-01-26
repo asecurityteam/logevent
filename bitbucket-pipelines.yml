@@ -5,6 +5,7 @@ pipelines:
         script:
           - mkdir -p /go/src/bitbucket.org/atlassian/logevent
           - cp -R ./* /go/src/bitbucket.org/atlassian/logevent
+          - cd /go/src/bitbucket.org/atlassian/logevent
           - go get -u golang.org/x/tools/cmd/goimports
           - if [[ "$(goimports -l -d .)" != "" ]]; then echo "$(goimports -l -d .)" && exit 1; fi
           - go get -u github.com/alecthomas/gometalinter
