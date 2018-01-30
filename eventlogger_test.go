@@ -158,88 +158,46 @@ func TestLoggerEventDefaultValues(t *testing.T) {
 	}
 }
 
-func TestLoggerTagsWithEventAttributesDebug(t *testing.T) {
-	var ctrl = gomock.NewController(t)
-	defer ctrl.Finish()
-
-	var event = eventMessage{One: "one", Two: 2, Message: "testmessage"}
-	var wrapped = newMockLogger(ctrl)
-	var ctx = xlog.NewContext(context.Background(), wrapped)
-	var logger = logger{logWithXlog, ctx}
-
-	wrapped.EXPECT().OutputF(xlog.LevelDebug, 4, "testmessage", gomock.Any()).Do(func(l xlog.Level, c int, m string, f map[string]interface{}) {
-		var ok bool
-		if _, ok = f["one"]; !ok {
-			t.Fatal("missing attribute one")
-		}
-		if _, ok = f["two"]; !ok {
-			t.Fatal("missing attribute two")
-		}
-	})
-	logger.Debug(event)
+type tagTestCase struct {
+	Level xlog.Level
+	Func  func(eventMessage, Logger)
 }
 
-func TestLoggerTagsWithEventAttributesInfo(t *testing.T) {
-	var ctrl = gomock.NewController(t)
-	defer ctrl.Finish()
-
-	var event = eventMessage{One: "one", Two: 2, Message: "testmessage"}
-	var wrapped = newMockLogger(ctrl)
-	var ctx = xlog.NewContext(context.Background(), wrapped)
-	var logger = logger{logWithXlog, ctx}
-
-	wrapped.EXPECT().OutputF(xlog.LevelInfo, 4, "testmessage", gomock.Any()).Do(func(l xlog.Level, c int, m string, f map[string]interface{}) {
-		var ok bool
-		if _, ok = f["one"]; !ok {
-			t.Fatal("missing attribute one")
-		}
-		if _, ok = f["two"]; !ok {
-			t.Fatal("missing attribute two")
-		}
-	})
-	logger.Info(event)
-}
-
-func TestLoggerTagsWithEventAttributesWarn(t *testing.T) {
-	var ctrl = gomock.NewController(t)
-	defer ctrl.Finish()
-
-	var event = eventMessage{One: "one", Two: 2, Message: "testmessage"}
-	var wrapped = newMockLogger(ctrl)
-	var ctx = xlog.NewContext(context.Background(), wrapped)
-	var logger = logger{logWithXlog, ctx}
-
-	wrapped.EXPECT().OutputF(xlog.LevelWarn, 4, "testmessage", gomock.Any()).Do(func(l xlog.Level, c int, m string, f map[string]interface{}) {
-		var ok bool
-		if _, ok = f["one"]; !ok {
-			t.Fatal("missing attribute one")
-		}
-		if _, ok = f["two"]; !ok {
-			t.Fatal("missing attribute two")
-		}
-	})
-	logger.Warn(event)
-}
-
-func TestLoggerTagsWithEventAttributesError(t *testing.T) {
-	var ctrl = gomock.NewController(t)
-	defer ctrl.Finish()
-
-	var event = eventMessage{One: "one", Two: 2, Message: "testmessage"}
-	var wrapped = newMockLogger(ctrl)
-	var ctx = xlog.NewContext(context.Background(), wrapped)
-	var logger = logger{logWithXlog, ctx}
-
-	wrapped.EXPECT().OutputF(xlog.LevelError, 4, "testmessage", gomock.Any()).Do(func(l xlog.Level, c int, m string, f map[string]interface{}) {
-		var ok bool
-		if _, ok = f["one"]; !ok {
-			t.Fatal("missing attribute one")
-		}
-		if _, ok = f["two"]; !ok {
-			t.Fatal("missing attribute two")
-		}
-	})
-	logger.Error(event)
+func TestLoggerTagsWithEventAttributesLevels(t *testing.T) {
+	var cases = []tagTestCase{
+		tagTestCase{Level: xlog.LevelDebug, Func: func(ev eventMessage, logger Logger) {
+			logger.Debug(ev)
+		}},
+		tagTestCase{Level: xlog.LevelInfo, Func: func(ev eventMessage, logger Logger) {
+			logger.Info(ev)
+		}},
+		tagTestCase{Level: xlog.LevelWarn, Func: func(ev eventMessage, logger Logger) {
+			logger.Warn(ev)
+		}},
+		tagTestCase{Level: xlog.LevelError, Func: func(ev eventMessage, logger Logger) {
+			logger.Error(ev)
+		}},
+	}
+	for _, currentCase := range cases {
+		t.Run(string(currentCase.Level), func(tb *testing.T) {
+			var ctrl = gomock.NewController(tb)
+			defer ctrl.Finish()
+			var event = eventMessage{One: "one", Two: 2, Message: "testmessage"}
+			var wrapped = newMockLogger(ctrl)
+			var ctx = xlog.NewContext(context.Background(), wrapped)
+			var logger = &logger{logWithXlog, ctx}
+			wrapped.EXPECT().OutputF(currentCase.Level, 4, "testmessage", gomock.Any()).Do(func(l xlog.Level, c int, m string, f map[string]interface{}) {
+				var ok bool
+				if _, ok = f["one"]; !ok {
+					t.Fatal("missing attribute one")
+				}
+				if _, ok = f["two"]; !ok {
+					t.Fatal("missing attribute two")
+				}
+			})
+			currentCase.Func(event, logger)
+		})
+	}
 }
 
 func TestLoggerTagsWithEmbeddedStructs(t *testing.T) {
