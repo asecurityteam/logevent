@@ -51,6 +51,11 @@ type EventWithEmbeddedStructs struct {
 	EmbeddedStruct
 }
 
+type EventWithNestedStructs struct {
+	Message string         `logevent:"message,default=testvalue"`
+	Nested  EmbeddedStruct `logevent:"nested"`
+}
+
 func TestLoggerWrapsContext(t *testing.T) {
 	var ctrl = gomock.NewController(t)
 	defer ctrl.Finish()
@@ -215,6 +220,32 @@ func TestLoggerTagsWithEmbeddedStructs(t *testing.T) {
 		var ok bool
 		if _, ok = f["one"]; !ok {
 			t.Fatalf("missing attribute one, %v", f)
+		}
+	})
+	logger.Error(event)
+}
+
+func TestLoggerTagsWithNestedStructs(t *testing.T) {
+	var ctrl = gomock.NewController(t)
+	defer ctrl.Finish()
+
+	var event = EventWithNestedStructs{
+		Nested: EmbeddedStruct{One: "one"},
+	}
+	var wrapped = newMockLogger(ctrl)
+	var ctx = xlog.NewContext(context.Background(), wrapped)
+	var logger = logger{logWithXlog, ctx}
+
+	wrapped.EXPECT().OutputF(xlog.LevelError, 4, "testvalue", gomock.Any()).Do(func(l xlog.Level, c int, m string, f map[string]interface{}) {
+		var ok bool
+		if _, ok = f["nested"]; !ok {
+			t.Fatalf("missing attribute nested, %v", f)
+		}
+		if _, ok = f["nested"].(EmbeddedStruct); !ok {
+			t.Fatalf("nested attribute type was not correct, %v", f)
+		}
+		if f["nested"].(EmbeddedStruct).One != "one" {
+			t.Fatalf("nested attribute value was not correct, %v", f)
 		}
 	})
 	logger.Error(event)

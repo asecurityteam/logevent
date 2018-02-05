@@ -172,7 +172,7 @@ func (l *logger) emit(level LogLevel, event interface{}) {
 	var annotations = make(map[string]interface{})
 	for len(strucs) > 0 {
 		for _, field := range strucs[0].Fields() {
-			if structs.IsStruct(field.Value()) {
+			if structs.IsStruct(field.Value()) && field.IsEmbedded() {
 				strucs = append(strucs, structs.New(field.Value()))
 				continue
 			}
