@@ -27,6 +27,13 @@ type UserOverLimit struct {
 
 ### Logging Events ###
 
+```golang
+logevent.FromContext(ctx).Info(myEvent{}) // Log the event
+logevent.FromContext(ctx).SetField("key", "value")
+logevent.FromContext(ctx).Warn("uh oh") // Fall back to string logging if not an event.
+var newCtx = logevent.NewContext(context.Background(), logger.Copy())
+```
+
 ### Adding Adapters ###
 
 ## Contributing ##
