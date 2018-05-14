@@ -1,0 +1,87 @@
+package logevent
+
+import (
+	"reflect"
+	"strconv"
+	"strings"
+
+	"github.com/fatih/structs"
+)
+
+const (
+	tagKey       = "logevent"
+	unknown      = "unknown"
+	defaultValue = "default="
+)
+
+func getDefaultValue(f *structs.Field, value string) interface{} {
+	switch reflect.TypeOf(f.Value()).Kind() {
+	case reflect.String:
+		return value
+	case reflect.Bool:
+		var final, _ = strconv.ParseBool(value)
+		return final
+	case reflect.Int:
+		var final, _ = strconv.ParseInt(value, 10, strconv.IntSize)
+		return int(final)
+	case reflect.Int8:
+		var final, _ = strconv.ParseInt(value, 10, 8)
+		return int8(final)
+	case reflect.Int16:
+		var final, _ = strconv.ParseInt(value, 10, 16)
+		return int16(final)
+	case reflect.Int32:
+		var final, _ = strconv.ParseInt(value, 10, 32)
+		return int32(final)
+	case reflect.Int64:
+		var final, _ = strconv.ParseInt(value, 10, 64)
+		return int64(final)
+	case reflect.Float32:
+		var final, _ = strconv.ParseFloat(value, 32)
+		return float32(final)
+	case reflect.Float64:
+		var final, _ = strconv.ParseFloat(value, 64)
+		return float64(final)
+	default:
+		return f.Value()
+	}
+}
+
+func getName(f *structs.Field) string {
+	var tags = strings.Split(f.Tag(tagKey), ",")
+	if len(tags) < 1 {
+		return f.Name()
+	}
+	return tags[0]
+}
+
+func getValue(f *structs.Field) interface{} {
+	if !f.IsZero() {
+		return f.Value()
+	}
+	var tags = strings.Split(f.Tag(tagKey), ",")
+	for _, tag := range tags {
+		if strings.Contains(tag, defaultValue) {
+			var parts = strings.Split(tag, "=")
+			if len(parts) == 2 {
+				return getDefaultValue(f, parts[1])
+			}
+		}
+	}
+	return f.Value()
+}
+
+func getMessage(s *structs.Struct) string {
+	var message string
+	var msgField *structs.Field
+	var ok bool
+	msgField, ok = s.FieldOk("Message")
+	if !ok {
+		return unknown
+	}
+	message, ok = getValue(msgField).(string)
+	if ok && len(message) > 0 {
+		return message
+	}
+	return unknown
+}
