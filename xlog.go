@@ -1,6 +1,9 @@
 package logevent
 
 import (
+	"io"
+	"os"
+	"strings"
 	"sync"
 
 	"github.com/fatih/structs"
@@ -16,13 +19,35 @@ type xlogLogger struct {
 	fields  *sync.Map
 }
 
-// AdaptXlog creates a logevent instance from an xlog instance. This exists to
-// support working with the default logging backend which is github.com/rs/xlog.
-// However, one of the values of using this framework is that it 1) abstracts
-// the underlying logging system used and 2) allows for custom implementations
-// of the logevent.Logger. Only use this adapter if absolutely necessary.
-func AdaptXlog(logger xlog.Logger) Logger {
-	return &xlogLogger{xlogger: logger, fields: &sync.Map{}}
+// Config records the requested settings for a logger for use with New().
+type Config struct {
+	// Level at which to log. Defaults to DEBUG.
+	// Acceptable are ERROR, WARN, INFO, and DEBUG.
+	Level string
+	// HumanReadable toggles the JSON format off in favour of a colourised
+	// log formatted for human readers.
+	HumanReadable bool
+	// Output defines to where logs are written. The default is os.Stdout.
+	Output io.Writer
+}
+
+// New creates an instance of a Logger using the default backend.
+func New(c Config) Logger {
+	if c.Output == nil {
+		c.Output = os.Stdout
+	}
+	var outputStream = xlog.NewConsoleOutputW(os.Stdout, xlog.NewLogfmtOutput(c.Output))
+	if !c.HumanReadable {
+		outputStream = xlog.NewJSONOutput(c.Output)
+	}
+	var xc = xlog.Config{
+		Level: levelFromString(c.Level),
+		Output: xlog.OutputFunc(func(fields map[string]interface{}) error {
+			return outputStream.Write(fields)
+		}),
+		DisablePooling: true,
+	}
+	return &xlogLogger{xlogger: xlog.New(xc), fields: &sync.Map{}}
 }
 
 // Debug will emit the event with level DEBUG.
@@ -106,4 +131,23 @@ func (log *xlogLogger) Copy() Logger {
 		return true
 	})
 	return copy
+}
+
+// levelFromString converts a string log level name into an xlog.Level type
+// for use with xlog.
+func levelFromString(level string) xlog.Level {
+	switch strings.ToUpper(level) {
+	case "DEBUG":
+		return xlog.LevelDebug
+	case "INFO":
+		return xlog.LevelInfo
+	case "WARN":
+		return xlog.LevelWarn
+	case "ERROR":
+		return xlog.LevelError
+	case "FATAL":
+		return xlog.LevelFatal
+	default:
+		return xlog.LevelDebug
+	}
 }
