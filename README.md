@@ -27,43 +27,14 @@ type UserOverLimit struct {
 
 ### Logging Events ###
 
-With a set of events defined, the `logevent.FromContext` tool can be used to
-pull a `Logger` instance from the context and then log an event. For example,
-the above event could be emitted like this:
-
-```go
-logger.Info(UserOverLimit{
-  UserID: "user1",
-  TenantID: "tenant1",
-  AttemptsOverLimit: 10,
-})
+```golang
+logevent.FromContext(ctx).Info(myEvent{}) // Log the event
+logevent.FromContext(ctx).SetField("key", "value")
+logevent.FromContext(ctx).Warn("uh oh") // Fall back to string logging if not an event.
+var newCtx = logevent.NewContext(context.Background(), logger.Copy())
 ```
-
-The following would appear in the log line:
-
-```json
-{"level": "info", "message": "user-over-limit", "user_id": "user1", "tenant_id": "tenant1", "attempts_over_limit": 10}
-```
-
-The types of data are preserved in the JSON output and the annotated names are
-used as the attributes names.
 
 ### Adding Adapters ###
-
-The default `logevent.FromContext` tool assumes a given context contains an
-instance of a logger from the `github.co/rs/xlog` package. This is the typical
-logger used by Stride and the default choice for the package. However, virtually
-any logging implementation can be plugged in by providing a `LogFunc` with
-a signature of:
-
-```golang
-type LogFunc func(ctx context.Context, level LogLevel, message string, annotations map[string]interface{})
-```
-
-Any logger that can be composed into this format can be added as an option for
-the event logging features. Calling `NewFromContextFunc` with a valid `LogFunc`
-will return the equivalent of `logevent.FromContext` can can be used.
-
 
 ## Contributing ##
 

@@ -1,15 +1,11 @@
 package logevent
 
 import (
-	"context"
 	"fmt"
-	"net/http"
 	"reflect"
 	"testing"
 
 	"github.com/fatih/structs"
-	"github.com/golang/mock/gomock"
-	"github.com/rs/xlog"
 )
 
 type eventNoMessage struct{}
@@ -54,19 +50,6 @@ type EventWithEmbeddedStructs struct {
 type EventWithNestedStructs struct {
 	Message string         `logevent:"message,default=testvalue"`
 	Nested  EmbeddedStruct `logevent:"nested"`
-}
-
-func TestLoggerWrapsContext(t *testing.T) {
-	var ctrl = gomock.NewController(t)
-	defer ctrl.Finish()
-
-	var wrapped = newMockLogger(ctrl)
-	var ctx = xlog.NewContext(context.Background(), wrapped)
-	var r, _ = http.NewRequest(http.MethodGet, "/", nil)
-	r = r.WithContext(ctx)
-
-	_ = FromContext(ctx).(*logger)
-
 }
 
 func TestLoggerEventNoMessage(t *testing.T) {
@@ -161,92 +144,4 @@ func TestLoggerEventDefaultValues(t *testing.T) {
 			}
 		})
 	}
-}
-
-type tagTestCase struct {
-	Level xlog.Level
-	Func  func(eventMessage, Logger)
-}
-
-func TestLoggerTagsWithEventAttributesLevels(t *testing.T) {
-	var cases = []tagTestCase{
-		tagTestCase{Level: xlog.LevelDebug, Func: func(ev eventMessage, logger Logger) {
-			logger.Debug(ev)
-		}},
-		tagTestCase{Level: xlog.LevelInfo, Func: func(ev eventMessage, logger Logger) {
-			logger.Info(ev)
-		}},
-		tagTestCase{Level: xlog.LevelWarn, Func: func(ev eventMessage, logger Logger) {
-			logger.Warn(ev)
-		}},
-		tagTestCase{Level: xlog.LevelError, Func: func(ev eventMessage, logger Logger) {
-			logger.Error(ev)
-		}},
-	}
-	for _, currentCase := range cases {
-		t.Run(string(currentCase.Level), func(tb *testing.T) {
-			var ctrl = gomock.NewController(tb)
-			defer ctrl.Finish()
-			var event = eventMessage{One: "one", Two: 2, Message: "testmessage"}
-			var wrapped = newMockLogger(ctrl)
-			var ctx = xlog.NewContext(context.Background(), wrapped)
-			var logger = &logger{logWithXlog, ctx}
-			wrapped.EXPECT().OutputF(currentCase.Level, 4, "testmessage", gomock.Any()).Do(func(l xlog.Level, c int, m string, f map[string]interface{}) {
-				var ok bool
-				if _, ok = f["one"]; !ok {
-					t.Fatal("missing attribute one")
-				}
-				if _, ok = f["two"]; !ok {
-					t.Fatal("missing attribute two")
-				}
-			})
-			currentCase.Func(event, logger)
-		})
-	}
-}
-
-func TestLoggerTagsWithEmbeddedStructs(t *testing.T) {
-	var ctrl = gomock.NewController(t)
-	defer ctrl.Finish()
-
-	var event = EventWithEmbeddedStructs{
-		EmbeddedStruct: EmbeddedStruct{One: "one"},
-	}
-	var wrapped = newMockLogger(ctrl)
-	var ctx = xlog.NewContext(context.Background(), wrapped)
-	var logger = logger{logWithXlog, ctx}
-
-	wrapped.EXPECT().OutputF(xlog.LevelError, 4, "testvalue", gomock.Any()).Do(func(l xlog.Level, c int, m string, f map[string]interface{}) {
-		var ok bool
-		if _, ok = f["one"]; !ok {
-			t.Fatalf("missing attribute one, %v", f)
-		}
-	})
-	logger.Error(event)
-}
-
-func TestLoggerTagsWithNestedStructs(t *testing.T) {
-	var ctrl = gomock.NewController(t)
-	defer ctrl.Finish()
-
-	var event = EventWithNestedStructs{
-		Nested: EmbeddedStruct{One: "one"},
-	}
-	var wrapped = newMockLogger(ctrl)
-	var ctx = xlog.NewContext(context.Background(), wrapped)
-	var logger = logger{logWithXlog, ctx}
-
-	wrapped.EXPECT().OutputF(xlog.LevelError, 4, "testvalue", gomock.Any()).Do(func(l xlog.Level, c int, m string, f map[string]interface{}) {
-		var ok bool
-		if _, ok = f["nested"]; !ok {
-			t.Fatalf("missing attribute nested, %v", f)
-		}
-		if _, ok = f["nested"].(EmbeddedStruct); !ok {
-			t.Fatalf("nested attribute type was not correct, %v", f)
-		}
-		if f["nested"].(EmbeddedStruct).One != "one" {
-			t.Fatalf("nested attribute value was not correct, %v", f)
-		}
-	})
-	logger.Error(event)
 }
