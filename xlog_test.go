@@ -96,16 +96,18 @@ func TestLoggerTagsWithEmbeddedStructs(t *testing.T) {
 	var ctrl = gomock.NewController(t)
 	defer ctrl.Finish()
 
-	var event = EventWithEmbeddedStructs{
-		EmbeddedStruct: EmbeddedStruct{One: "one"},
-	}
+	var event = EventWithEmbeddedStructs{}
 	var wrapped = newMockLogger(ctrl)
 	var logger = &xlogLogger{wrapped, &sync.Map{}}
+	logger.SetField("one", "override me!")
 
 	wrapped.EXPECT().OutputF(xlog.LevelError, 5, "testvalue", gomock.Any()).Do(func(l xlog.Level, c int, m string, f map[string]interface{}) {
 		var ok bool
-		if _, ok = f["one"]; !ok {
+		var val interface{}
+		if val, ok = f["one"]; !ok {
 			t.Fatalf("missing attribute one, %v", f)
+		} else if val != "fizz" {
+			t.Fatalf("Expected default value of embedded struct field to be overridden to fizz, but was %v", val)
 		}
 	})
 	logger.Error(event)
