@@ -2,16 +2,30 @@ image: golang
 pipelines:
   default:
     - step:
+        name: GoImports
+        script:
+          - mkdir -p /go/src/bitbucket.org/atlassian/logevent
+          - cp -R ./* /go/src/bitbucket.org/atlassian/logevent
+          - go get -u golang.org/x/tools/cmd/goimports
+          - cd /go/src/bitbucket.org/atlassian/logevent
+          - if [[ "$(goimports -l -d .)" != "" ]]; then echo "$(goimports -l -d .)" && exit 1; fi
+    - step:
+        name: Linter Checks
         script:
           - mkdir -p /go/src/bitbucket.org/atlassian/logevent
           - cp -R ./* /go/src/bitbucket.org/atlassian/logevent
           - cd /go/src/bitbucket.org/atlassian/logevent
-          - go get -u golang.org/x/tools/cmd/goimports
-          - if [[ "$(goimports -l -d .)" != "" ]]; then echo "$(goimports -l -d .)" && exit 1; fi
+          - curl https://glide.sh/get | sh
+          - glide up
           - go get -u github.com/alecthomas/gometalinter
           - gometalinter --install --update
           - gometalinter --vendor --disable-all --enable=vet --enable=vetshadow --enable=golint --enable=ineffassign --enable=goconst --tests .
+    - step:
+        name: Unit Tests
+        script:
+          - mkdir -p /go/src/bitbucket.org/atlassian/logevent
+          - cp -R ./* /go/src/bitbucket.org/atlassian/logevent
+          - cd /go/src/bitbucket.org/atlassian/logevent
           - curl https://glide.sh/get | sh
           - glide up
-          - echo '# Generate coverage report and test for race conditions'
-          - go test -race -cover
+          - go test -race -cover -coverpkg=./... ./...
