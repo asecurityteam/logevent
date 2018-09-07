@@ -27,7 +27,7 @@ type eventMessageBadAnnotation struct {
 }
 
 type eventMessage struct {
-	One     string `logevent:"one"`
+	One     string `logevent:"one,default=foo"`
 	Two     int    `logevent:"two"`
 	Message string `logevent:"message,default=testvalue"`
 }
@@ -40,11 +40,12 @@ type eventDefaultNumbers struct {
 
 type EmbeddedStruct struct {
 	Message string `logevent:"message,default=testvalue"`
-	One     string `logevent:"one"`
+	One     string `logevent:"one,default=foo"`
 }
 
 type EventWithEmbeddedStructs struct {
 	EmbeddedStruct
+	One string `logevent:"one,default=fizz"`
 }
 
 type EventWithNestedStructs struct {
