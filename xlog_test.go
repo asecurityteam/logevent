@@ -1,11 +1,13 @@
 package logevent
 
 import (
-	"sync"
+	"bytes"
+	"encoding/json"
+	"strings"
 	"testing"
 
-	"github.com/golang/mock/gomock"
 	"github.com/rs/xlog"
+	"github.com/stretchr/testify/require"
 )
 
 type tagTestCase struct {
@@ -30,25 +32,26 @@ func TestLoggerTagsWithEventAttributesLevels(t *testing.T) {
 	}
 	for _, currentCase := range cases {
 		t.Run(string(currentCase.Level), func(tb *testing.T) {
-			var ctrl = gomock.NewController(tb)
-			defer ctrl.Finish()
 			var event = eventMessage{One: "one", Two: 2, Message: "testmessage"}
-			var wrapped = newMockLogger(ctrl)
-			var logger = &xlogLogger{wrapped, &sync.Map{}}
+			var buff = &bytes.Buffer{}
+			var c = Config{Output: buff}
+			var logger = New(c)
 			logger.SetField("out-of-event", "true")
-			wrapped.EXPECT().OutputF(currentCase.Level, 5, "testmessage", gomock.Any()).Do(func(l xlog.Level, c int, m string, f map[string]interface{}) {
-				var ok bool
-				if _, ok = f["one"]; !ok {
-					t.Fatal("missing attribute one")
-				}
-				if _, ok = f["two"]; !ok {
-					t.Fatal("missing attribute two")
-				}
-				if _, ok = f["out-of-event"]; !ok {
-					t.Fatal("missing attribute out-of-event")
-				}
-			})
 			currentCase.Func(event, logger)
+
+			// trim the extra empty line, and split all lines
+			var lines = strings.Split(strings.Trim(buff.String(), "\n"), "\n")
+			var line = make(map[string]interface{})
+			_ = json.Unmarshal([]byte(lines[0]), &line)
+			var _, okFile = line["file"]
+			var _, okTime = line["time"]
+			require.True(t, okFile, "log line missing file attribute")
+			require.True(t, okTime, "log line missing time attribute")
+			require.Equal(t, currentCase.Level, levelFromString(line["level"].(string)))
+			require.Equal(t, "testmessage", line["message"])
+			require.Equal(t, "one", line["one"])
+			require.Equal(t, "true", line["out-of-event"])
+			require.Equal(t, 2.0, line["two"])
 		})
 	}
 }
@@ -75,65 +78,109 @@ func TestLoggerTagsStringWithAttributesLevels(t *testing.T) {
 	}
 	for _, currentCase := range cases {
 		t.Run(string(currentCase.Level), func(tb *testing.T) {
-			var ctrl = gomock.NewController(tb)
-			defer ctrl.Finish()
 			var event = "testmessage"
-			var wrapped = newMockLogger(ctrl)
-			var logger = &xlogLogger{wrapped, &sync.Map{}}
+			var buff = &bytes.Buffer{}
+			var c = Config{Output: buff}
+			var logger = New(c)
 			logger.SetField("out-of-event", "true")
-			wrapped.EXPECT().OutputF(currentCase.Level, 5, "testmessage", gomock.Any()).Do(func(l xlog.Level, c int, m string, f map[string]interface{}) {
-				var ok bool
-				if _, ok = f["out-of-event"]; !ok {
-					t.Fatal("missing attribute out-of-event")
-				}
-			})
 			currentCase.Func(event, logger)
+
+			// trim the extra empty line, and split all lines
+			var lines = strings.Split(strings.Trim(buff.String(), "\n"), "\n")
+			var line = make(map[string]interface{})
+			_ = json.Unmarshal([]byte(lines[0]), &line)
+			var _, okFile = line["file"]
+			var _, okTime = line["time"]
+			require.True(t, okFile, "log line missing file attribute")
+			require.True(t, okTime, "log line missing time attribute")
+			require.Equal(t, currentCase.Level, levelFromString(line["level"].(string)))
+			require.Equal(t, "testmessage", line["message"])
+			require.Equal(t, "true", line["out-of-event"])
 		})
 	}
 }
 
 func TestLoggerTagsWithEmbeddedStructs(t *testing.T) {
-	var ctrl = gomock.NewController(t)
-	defer ctrl.Finish()
-
 	var event = EventWithEmbeddedStructs{}
-	var wrapped = newMockLogger(ctrl)
-	var logger = &xlogLogger{wrapped, &sync.Map{}}
+	var buff = &bytes.Buffer{}
+	var c = Config{Output: buff}
+	var logger = New(c)
 	logger.SetField("one", "override me!")
-
-	wrapped.EXPECT().OutputF(xlog.LevelError, 5, "testvalue", gomock.Any()).Do(func(l xlog.Level, c int, m string, f map[string]interface{}) {
-		var ok bool
-		var val interface{}
-		if val, ok = f["one"]; !ok {
-			t.Fatalf("missing attribute one, %v", f)
-		} else if val != "fizz" {
-			t.Fatalf("Expected default value of embedded struct field to be overridden to fizz, but was %v", val)
-		}
-	})
 	logger.Error(event)
+
+	// trim the extra empty line, and split all lines
+	var lines = strings.Split(strings.Trim(buff.String(), "\n"), "\n")
+	var line = make(map[string]interface{})
+	_ = json.Unmarshal([]byte(lines[0]), &line)
+	var _, okFile = line["file"]
+	var _, okTime = line["time"]
+	require.True(t, okFile, "log line missing file attribute")
+	require.True(t, okTime, "log line missing time attribute")
+	require.Equal(t, "error", line["level"])
+	require.Equal(t, "testvalue", line["message"])
+	require.Equal(t, "fizz", line["one"])
 }
 
 func TestLoggerTagsWithNestedStructs(t *testing.T) {
-	var ctrl = gomock.NewController(t)
-	defer ctrl.Finish()
-
-	var event = EventWithNestedStructs{
+	var nestedEvent = EventWithNestedStructs{
 		Nested: EmbeddedStruct{One: "one"},
 	}
-	var wrapped = newMockLogger(ctrl)
-	var logger = &xlogLogger{wrapped, &sync.Map{}}
+	var doubleNestedEvent = EventWithDoubleNestedStructs{
+		Nested: nestedEvent,
+	}
+	var buff = &bytes.Buffer{}
+	var c = Config{Output: buff}
+	var logger = New(c)
 
-	wrapped.EXPECT().OutputF(xlog.LevelError, 5, "testvalue", gomock.Any()).Do(func(l xlog.Level, c int, m string, f map[string]interface{}) {
-		var ok bool
-		if _, ok = f["nested"]; !ok {
-			t.Fatalf("missing attribute nested, %v", f)
-		}
-		if _, ok = f["nested"].(EmbeddedStruct); !ok {
-			t.Fatalf("nested attribute type was not correct, %v", f)
-		}
-		if f["nested"].(EmbeddedStruct).One != "one" {
-			t.Fatalf("nested attribute value was not correct, %v", f)
-		}
-	})
-	logger.Error(event)
+	logger.Error(doubleNestedEvent)
+
+	var lines = strings.Split(strings.Trim(buff.String(), "\n"), "\n")
+	var line = make(map[string]interface{})
+	_ = json.Unmarshal([]byte(lines[0]), &line)
+	var _, okFile = line["file"]
+	var _, okTime = line["time"]
+	require.True(t, okFile, "log line missing file attribute")
+	require.True(t, okTime, "log line missing time attribute")
+	require.Equal(t, "error", line["level"])
+	require.Equal(t, "testvalue", line["message"])
+
+	var nested, okNested = line["nested"]
+	require.True(t, okNested, "log line missing nested attribute")
+	var nestedStruct = nested.(map[string]interface{})
+	require.Equal(t, "testvalue", nestedStruct["message"])
+
+	var doubleNested, okDoubleNested = nestedStruct["nested"]
+	require.True(t, okDoubleNested, "log line missing nested attribute")
+	var doubleNestedStruct = doubleNested.(map[string]interface{})
+	require.Equal(t, "testvalue", doubleNestedStruct["message"])
+	require.Equal(t, "one", doubleNestedStruct["one"])
+}
+
+func TestLoggerTagsWithNestedEmbeddedStructs(t *testing.T) {
+	var nestedEvent = EventWithNestedEmbeddedStructs{
+		Nested: EventWithEmbeddedStructs{},
+	}
+
+	var buff = &bytes.Buffer{}
+	var c = Config{Output: buff}
+	var logger = New(c)
+
+	logger.Error(nestedEvent)
+
+	var lines = strings.Split(strings.Trim(buff.String(), "\n"), "\n")
+	var line = make(map[string]interface{})
+	_ = json.Unmarshal([]byte(lines[0]), &line)
+	var _, okFile = line["file"]
+	var _, okTime = line["time"]
+	require.True(t, okFile, "log line missing file attribute")
+	require.True(t, okTime, "log line missing time attribute")
+	require.Equal(t, "error", line["level"])
+	require.Equal(t, "testvalue", line["message"])
+
+	var nested, okNested = line["nested"]
+	require.True(t, okNested, "log line missing nested attribute")
+	var nestedStruct = nested.(map[string]interface{})
+	require.Equal(t, "testvalue", nestedStruct["message"])
+	require.Equal(t, "fizz", nestedStruct["one"])
+
 }

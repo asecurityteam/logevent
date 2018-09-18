@@ -53,6 +53,16 @@ type EventWithNestedStructs struct {
 	Nested  EmbeddedStruct `logevent:"nested"`
 }
 
+type EventWithDoubleNestedStructs struct {
+	Message string                 `logevent:"message,default=testvalue"`
+	Nested  EventWithNestedStructs `logevent:"nested"`
+}
+
+type EventWithNestedEmbeddedStructs struct {
+	Message string                   `logevent:"message,default=testvalue"`
+	Nested  EventWithEmbeddedStructs `logevent:"nested"`
+}
+
 func TestLoggerEventNoMessage(t *testing.T) {
 	var s = structs.New(eventNoMessage{})
 	var result = getMessage(s)

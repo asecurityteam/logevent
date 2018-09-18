@@ -76,27 +76,12 @@ func (log *xlogLogger) emitString(level xlog.Level, event string) {
 
 func (log *xlogLogger) emitStruct(level xlog.Level, event interface{}) {
 	var s = structs.New(event)
-	s.TagName = tagKey
 	var annotations = make(map[string]interface{})
-	var strucs = []*structs.Struct{s}
-	for len(strucs) > 0 {
-		for _, field := range strucs[0].Fields() {
-			if structs.IsStruct(field.Value()) && field.IsEmbedded() {
-				strucs = append(strucs, structs.New(field.Value()))
-				continue
-			}
-			if _, ok := annotations[getName(field)]; !ok {
-				annotations[getName(field)] = getValue(field)
-			}
-		}
-		strucs = strucs[1:]
-	}
+	buildAnnotations(s, annotations)
 
 	// apply logger level annotations, but don't override what was logged in a struct
 	log.fields.Range(func(key interface{}, value interface{}) bool {
-		if _, ok := annotations[key.(string)]; !ok {
-			annotations[key.(string)] = value
-		}
+		addIfNotExists(annotations, key.(string), value)
 		return true
 	})
 

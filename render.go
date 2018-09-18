@@ -85,3 +85,30 @@ func getMessage(s *structs.Struct) string {
 	}
 	return unknown
 }
+
+func buildAnnotations(s *structs.Struct, annotations map[string]interface{}) {
+	s.TagName = tagKey
+	var strucs = []*structs.Struct{s}
+	for len(strucs) > 0 {
+		for _, field := range strucs[0].Fields() {
+			if structs.IsStruct(field.Value()) && field.IsEmbedded() {
+				strucs = append(strucs, structs.New(field.Value()))
+				continue
+			}
+			if structs.IsStruct(field.Value()) {
+				var subAnnotations = make(map[string]interface{})
+				addIfNotExists(annotations, getName(field), subAnnotations)
+				buildAnnotations(structs.New(field.Value()), subAnnotations)
+			} else {
+				addIfNotExists(annotations, getName(field), getValue(field))
+			}
+		}
+		strucs = strucs[1:]
+	}
+}
+
+func addIfNotExists(m map[string]interface{}, key string, value interface{}) {
+	if _, ok := m[key]; !ok {
+		m[key] = value
+	}
+}
