@@ -1,6 +1,6 @@
 package: bitbucket.org/atlassian/logevent
 import:
 - package: github.com/fatih/structs
-- package: github.com/rs/xlog
+- package: github.com/rs/zerolog
 - package: github.com/stretchr/testify
   version: ^v1.2.2

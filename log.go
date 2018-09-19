@@ -7,16 +7,17 @@ import (
 	"sync"
 
 	"github.com/fatih/structs"
-	"github.com/rs/xlog"
+	"github.com/rs/zerolog"
 )
 
 type fallbackEvent struct {
 	Message string `logevent:"message"`
 }
 
-type xlogLogger struct {
-	xlogger xlog.Logger
-	fields  *sync.Map
+type logger struct {
+	c      Config
+	l      zerolog.Logger
+	fields *sync.Map
 }
 
 // Config records the requested settings for a logger for use with New().
@@ -36,45 +37,44 @@ func New(c Config) Logger {
 	if c.Output == nil {
 		c.Output = os.Stdout
 	}
-	var outputStream = xlog.NewConsoleOutputW(os.Stdout, xlog.NewLogfmtOutput(c.Output))
-	if !c.HumanReadable {
-		outputStream = xlog.NewJSONOutput(c.Output)
+	zerolog.CallerFieldName = "file"
+	zerolog.CallerSkipFrameCount = 5
+	var l = zerolog.New(c.Output).With().Caller().Timestamp().Logger().Level(levelFromString(c.Level))
+	if c.HumanReadable {
+		l = l.Output(zerolog.ConsoleWriter{Out: os.Stdout})
 	}
-	var xc = xlog.Config{
-		Level: levelFromString(c.Level),
-		Output: xlog.OutputFunc(func(fields map[string]interface{}) error {
-			return outputStream.Write(fields)
-		}),
-		DisablePooling: true,
+	return &logger{
+		c:      c,
+		l:      l,
+		fields: &sync.Map{},
 	}
-	return &xlogLogger{xlogger: xlog.New(xc), fields: &sync.Map{}}
 }
 
 // Debug will emit the event with level DEBUG.
-func (log *xlogLogger) Debug(event interface{}) {
-	log.emit(xlog.LevelDebug, event)
+func (log *logger) Debug(event interface{}) {
+	log.emit(zerolog.DebugLevel, event)
 }
 
 // Info will emit the event with level INFO.
-func (log *xlogLogger) Info(event interface{}) {
-	log.emit(xlog.LevelInfo, event)
+func (log *logger) Info(event interface{}) {
+	log.emit(zerolog.InfoLevel, event)
 }
 
 // Warn will emit the event with level WARN
-func (log *xlogLogger) Warn(event interface{}) {
-	log.emit(xlog.LevelWarn, event)
+func (log *logger) Warn(event interface{}) {
+	log.emit(zerolog.WarnLevel, event)
 }
 
 // Error will emit the event with level ERROR.
-func (log *xlogLogger) Error(event interface{}) {
-	log.emit(xlog.LevelError, event)
+func (log *logger) Error(event interface{}) {
+	log.emit(zerolog.ErrorLevel, event)
 }
 
-func (log *xlogLogger) emitString(level xlog.Level, event string) {
+func (log *logger) emitString(level zerolog.Level, event string) {
 	log.emitStruct(level, fallbackEvent{Message: event})
 }
 
-func (log *xlogLogger) emitStruct(level xlog.Level, event interface{}) {
+func (log *logger) emitStruct(level zerolog.Level, event interface{}) {
 	var s = structs.New(event)
 	var annotations = make(map[string]interface{})
 	buildAnnotations(s, annotations)
@@ -87,10 +87,10 @@ func (log *xlogLogger) emitStruct(level xlog.Level, event interface{}) {
 
 	var message = getMessage(s)
 	delete(annotations, "message")
-	log.xlogger.OutputF(level, 5, message, annotations)
+	log.l.WithLevel(level).Fields(annotations).Msg(message)
 }
 
-func (log *xlogLogger) emit(level xlog.Level, event interface{}) {
+func (log *logger) emit(level zerolog.Level, event interface{}) {
 	// Fallback for string values to unstructured logging. This exists to
 	// help with migration paths from unstructure to structured by allowing
 	// refactors to occur over time. It is **not** recommended to use this
@@ -107,16 +107,13 @@ func (log *xlogLogger) emit(level xlog.Level, event interface{}) {
 // 1) not directly related to the event (such as logging context propagation
 // from a remote call) or 2) part of an emerging set of common keys that would
 // eventually be added automatically to structs via a request context.
-func (log *xlogLogger) SetField(name string, value interface{}) {
+func (log *logger) SetField(name string, value interface{}) {
 	log.fields.Store(name, value)
 }
 
 // Copy the logger of use in some other context.
-func (log *xlogLogger) Copy() Logger {
-	var copy = &xlogLogger{
-		xlogger: xlog.Copy(log.xlogger),
-		fields:  &sync.Map{},
-	}
+func (log *logger) Copy() Logger {
+	var copy = New(log.c).(*logger)
 	log.fields.Range(func(key interface{}, value interface{}) bool {
 		copy.fields.Store(key, value)
 		return true
@@ -126,19 +123,19 @@ func (log *xlogLogger) Copy() Logger {
 
 // levelFromString converts a string log level name into an xlog.Level type
 // for use with xlog.
-func levelFromString(level string) xlog.Level {
+func levelFromString(level string) zerolog.Level {
 	switch strings.ToUpper(level) {
 	case "DEBUG":
-		return xlog.LevelDebug
+		return zerolog.DebugLevel
 	case "INFO":
-		return xlog.LevelInfo
+		return zerolog.InfoLevel
 	case "WARN":
-		return xlog.LevelWarn
+		return zerolog.WarnLevel
 	case "ERROR":
-		return xlog.LevelError
+		return zerolog.ErrorLevel
 	case "FATAL":
-		return xlog.LevelFatal
+		return zerolog.FatalLevel
 	default:
-		return xlog.LevelDebug
+		return zerolog.DebugLevel
 	}
 }

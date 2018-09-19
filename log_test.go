@@ -6,27 +6,27 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/rs/xlog"
+	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
 
 type tagTestCase struct {
-	Level xlog.Level
+	Level zerolog.Level
 	Func  func(eventMessage, Logger)
 }
 
 func TestLoggerTagsWithEventAttributesLevels(t *testing.T) {
 	var cases = []tagTestCase{
-		tagTestCase{Level: xlog.LevelDebug, Func: func(ev eventMessage, logger Logger) {
+		tagTestCase{Level: zerolog.DebugLevel, Func: func(ev eventMessage, logger Logger) {
 			logger.Debug(ev)
 		}},
-		tagTestCase{Level: xlog.LevelInfo, Func: func(ev eventMessage, logger Logger) {
+		tagTestCase{Level: zerolog.InfoLevel, Func: func(ev eventMessage, logger Logger) {
 			logger.Info(ev)
 		}},
-		tagTestCase{Level: xlog.LevelWarn, Func: func(ev eventMessage, logger Logger) {
+		tagTestCase{Level: zerolog.WarnLevel, Func: func(ev eventMessage, logger Logger) {
 			logger.Warn(ev)
 		}},
-		tagTestCase{Level: xlog.LevelError, Func: func(ev eventMessage, logger Logger) {
+		tagTestCase{Level: zerolog.ErrorLevel, Func: func(ev eventMessage, logger Logger) {
 			logger.Error(ev)
 		}},
 	}
@@ -57,22 +57,22 @@ func TestLoggerTagsWithEventAttributesLevels(t *testing.T) {
 }
 
 type stringTagTestCase struct {
-	Level xlog.Level
+	Level zerolog.Level
 	Func  func(string, Logger)
 }
 
 func TestLoggerTagsStringWithAttributesLevels(t *testing.T) {
 	var cases = []stringTagTestCase{
-		stringTagTestCase{Level: xlog.LevelDebug, Func: func(ev string, logger Logger) {
+		stringTagTestCase{Level: zerolog.DebugLevel, Func: func(ev string, logger Logger) {
 			logger.Debug(ev)
 		}},
-		stringTagTestCase{Level: xlog.LevelInfo, Func: func(ev string, logger Logger) {
+		stringTagTestCase{Level: zerolog.InfoLevel, Func: func(ev string, logger Logger) {
 			logger.Info(ev)
 		}},
-		stringTagTestCase{Level: xlog.LevelWarn, Func: func(ev string, logger Logger) {
+		stringTagTestCase{Level: zerolog.WarnLevel, Func: func(ev string, logger Logger) {
 			logger.Warn(ev)
 		}},
-		stringTagTestCase{Level: xlog.LevelError, Func: func(ev string, logger Logger) {
+		stringTagTestCase{Level: zerolog.ErrorLevel, Func: func(ev string, logger Logger) {
 			logger.Error(ev)
 		}},
 	}
