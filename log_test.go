@@ -46,16 +46,16 @@ type tagTestCase struct {
 
 func TestLoggerTagsWithEventAttributesLevels(t *testing.T) {
 	var cases = []tagTestCase{
-		tagTestCase{Level: zerolog.DebugLevel, Func: func(ev eventMessage, logger Logger) {
+		{Level: zerolog.DebugLevel, Func: func(ev eventMessage, logger Logger) {
 			logger.Debug(ev)
 		}},
-		tagTestCase{Level: zerolog.InfoLevel, Func: func(ev eventMessage, logger Logger) {
+		{Level: zerolog.InfoLevel, Func: func(ev eventMessage, logger Logger) {
 			logger.Info(ev)
 		}},
-		tagTestCase{Level: zerolog.WarnLevel, Func: func(ev eventMessage, logger Logger) {
+		{Level: zerolog.WarnLevel, Func: func(ev eventMessage, logger Logger) {
 			logger.Warn(ev)
 		}},
-		tagTestCase{Level: zerolog.ErrorLevel, Func: func(ev eventMessage, logger Logger) {
+		{Level: zerolog.ErrorLevel, Func: func(ev eventMessage, logger Logger) {
 			logger.Error(ev)
 		}},
 	}
@@ -92,16 +92,16 @@ type stringTagTestCase struct {
 
 func TestLoggerTagsStringWithAttributesLevels(t *testing.T) {
 	var cases = []stringTagTestCase{
-		stringTagTestCase{Level: zerolog.DebugLevel, Func: func(ev string, logger Logger) {
+		{Level: zerolog.DebugLevel, Func: func(ev string, logger Logger) {
 			logger.Debug(ev)
 		}},
-		stringTagTestCase{Level: zerolog.InfoLevel, Func: func(ev string, logger Logger) {
+		{Level: zerolog.InfoLevel, Func: func(ev string, logger Logger) {
 			logger.Info(ev)
 		}},
-		stringTagTestCase{Level: zerolog.WarnLevel, Func: func(ev string, logger Logger) {
+		{Level: zerolog.WarnLevel, Func: func(ev string, logger Logger) {
 			logger.Warn(ev)
 		}},
-		stringTagTestCase{Level: zerolog.ErrorLevel, Func: func(ev string, logger Logger) {
+		{Level: zerolog.ErrorLevel, Func: func(ev string, logger Logger) {
 			logger.Error(ev)
 		}},
 	}
@@ -156,7 +156,8 @@ func TestLoggerTagsWithNestedStructs(t *testing.T) {
 	var nestedEvent = EventWithNestedStructs{
 		Nested: EmbeddedStruct{
 			One: "one",
-			Two: timeField},
+			Two: timeField,
+		},
 	}
 	var doubleNestedEvent = EventWithDoubleNestedStructs{
 		Nested: nestedEvent,
