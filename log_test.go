@@ -13,6 +13,32 @@ import (
 
 var timeField = time.Now()
 
+type EmbeddedStruct struct {
+	Message string    `logevent:"message,default=testvalue"`
+	One     string    `logevent:"one,default=foo"`
+	Two     time.Time `logevent:"two"`
+}
+
+type EventWithEmbeddedStructs struct {
+	EmbeddedStruct
+	One string `logevent:"one,default=fizz"`
+}
+
+type EventWithNestedStructs struct {
+	Message string         `logevent:"message,default=testvalue"`
+	Nested  EmbeddedStruct `logevent:"nested"`
+}
+
+type EventWithDoubleNestedStructs struct {
+	Message string                 `logevent:"message,default=testvalue"`
+	Nested  EventWithNestedStructs `logevent:"nested"`
+}
+
+type EventWithNestedEmbeddedStructs struct {
+	Message string                   `logevent:"message,default=testvalue"`
+	Nested  EventWithEmbeddedStructs `logevent:"nested"`
+}
+
 type tagTestCase struct {
 	Level zerolog.Level
 	Func  func(eventMessage, Logger)
