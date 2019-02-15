@@ -5,10 +5,13 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
+
+var timeField = time.Now()
 
 type tagTestCase struct {
 	Level zerolog.Level
@@ -101,7 +104,8 @@ func TestLoggerTagsStringWithAttributesLevels(t *testing.T) {
 }
 
 func TestLoggerTagsWithEmbeddedStructs(t *testing.T) {
-	var event = EventWithEmbeddedStructs{}
+	var embeddedStruct = EmbeddedStruct{Two: timeField}
+	var event = EventWithEmbeddedStructs{EmbeddedStruct: embeddedStruct}
 	var buff = &bytes.Buffer{}
 	var c = Config{Output: buff}
 	var logger = New(c)
@@ -119,11 +123,14 @@ func TestLoggerTagsWithEmbeddedStructs(t *testing.T) {
 	require.Equal(t, "error", line["level"])
 	require.Equal(t, "testvalue", line["message"])
 	require.Equal(t, "fizz", line["one"])
+	require.Equal(t, timeField.Format(time.RFC3339Nano), line["two"])
 }
 
 func TestLoggerTagsWithNestedStructs(t *testing.T) {
 	var nestedEvent = EventWithNestedStructs{
-		Nested: EmbeddedStruct{One: "one"},
+		Nested: EmbeddedStruct{
+			One: "one",
+			Two: timeField},
 	}
 	var doubleNestedEvent = EventWithDoubleNestedStructs{
 		Nested: nestedEvent,
@@ -154,11 +161,13 @@ func TestLoggerTagsWithNestedStructs(t *testing.T) {
 	var doubleNestedStruct = doubleNested.(map[string]interface{})
 	require.Equal(t, "testvalue", doubleNestedStruct["message"])
 	require.Equal(t, "one", doubleNestedStruct["one"])
+	require.Equal(t, timeField.Format(time.RFC3339Nano), doubleNestedStruct["two"])
 }
 
 func TestLoggerTagsWithNestedEmbeddedStructs(t *testing.T) {
+	var embeddedStruct = EventWithEmbeddedStructs{EmbeddedStruct: EmbeddedStruct{Two: timeField}}
 	var nestedEvent = EventWithNestedEmbeddedStructs{
-		Nested: EventWithEmbeddedStructs{},
+		Nested: embeddedStruct,
 	}
 
 	var buff = &bytes.Buffer{}
@@ -182,5 +191,5 @@ func TestLoggerTagsWithNestedEmbeddedStructs(t *testing.T) {
 	var nestedStruct = nested.(map[string]interface{})
 	require.Equal(t, "testvalue", nestedStruct["message"])
 	require.Equal(t, "fizz", nestedStruct["one"])
-
+	require.Equal(t, timeField.Format(time.RFC3339Nano), nestedStruct["two"])
 }

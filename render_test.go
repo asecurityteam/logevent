@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/fatih/structs"
 )
@@ -39,8 +40,9 @@ type eventDefaultNumbers struct {
 }
 
 type EmbeddedStruct struct {
-	Message string `logevent:"message,default=testvalue"`
-	One     string `logevent:"one,default=foo"`
+	Message string    `logevent:"message,default=testvalue"`
+	One     string    `logevent:"one,default=foo"`
+	Two     time.Time `logevent:"two"`
 }
 
 type EventWithEmbeddedStructs struct {

@@ -5,6 +5,7 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/fatih/structs"
 	"github.com/rs/zerolog"
@@ -39,6 +40,7 @@ func New(c Config) Logger {
 	}
 	zerolog.CallerFieldName = "file"
 	zerolog.CallerSkipFrameCount = 5
+	zerolog.TimeFieldFormat = time.RFC3339Nano
 	var l = zerolog.New(c.Output).With().Caller().Timestamp().Logger().Level(levelFromString(c.Level))
 	if c.HumanReadable {
 		l = l.Output(zerolog.ConsoleWriter{Out: os.Stdout})
