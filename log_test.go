@@ -5,10 +5,39 @@ import (
 	"encoding/json"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
+
+var timeField = time.Now()
+
+type EmbeddedStruct struct {
+	Message string    `logevent:"message,default=testvalue"`
+	One     string    `logevent:"one,default=foo"`
+	Two     time.Time `logevent:"two"`
+}
+
+type EventWithEmbeddedStructs struct {
+	EmbeddedStruct
+	One string `logevent:"one,default=fizz"`
+}
+
+type EventWithNestedStructs struct {
+	Message string         `logevent:"message,default=testvalue"`
+	Nested  EmbeddedStruct `logevent:"nested"`
+}
+
+type EventWithDoubleNestedStructs struct {
+	Message string                 `logevent:"message,default=testvalue"`
+	Nested  EventWithNestedStructs `logevent:"nested"`
+}
+
+type EventWithNestedEmbeddedStructs struct {
+	Message string                   `logevent:"message,default=testvalue"`
+	Nested  EventWithEmbeddedStructs `logevent:"nested"`
+}
 
 type tagTestCase struct {
 	Level zerolog.Level
@@ -17,16 +46,16 @@ type tagTestCase struct {
 
 func TestLoggerTagsWithEventAttributesLevels(t *testing.T) {
 	var cases = []tagTestCase{
-		tagTestCase{Level: zerolog.DebugLevel, Func: func(ev eventMessage, logger Logger) {
+		{Level: zerolog.DebugLevel, Func: func(ev eventMessage, logger Logger) {
 			logger.Debug(ev)
 		}},
-		tagTestCase{Level: zerolog.InfoLevel, Func: func(ev eventMessage, logger Logger) {
+		{Level: zerolog.InfoLevel, Func: func(ev eventMessage, logger Logger) {
 			logger.Info(ev)
 		}},
-		tagTestCase{Level: zerolog.WarnLevel, Func: func(ev eventMessage, logger Logger) {
+		{Level: zerolog.WarnLevel, Func: func(ev eventMessage, logger Logger) {
 			logger.Warn(ev)
 		}},
-		tagTestCase{Level: zerolog.ErrorLevel, Func: func(ev eventMessage, logger Logger) {
+		{Level: zerolog.ErrorLevel, Func: func(ev eventMessage, logger Logger) {
 			logger.Error(ev)
 		}},
 	}
@@ -63,16 +92,16 @@ type stringTagTestCase struct {
 
 func TestLoggerTagsStringWithAttributesLevels(t *testing.T) {
 	var cases = []stringTagTestCase{
-		stringTagTestCase{Level: zerolog.DebugLevel, Func: func(ev string, logger Logger) {
+		{Level: zerolog.DebugLevel, Func: func(ev string, logger Logger) {
 			logger.Debug(ev)
 		}},
-		stringTagTestCase{Level: zerolog.InfoLevel, Func: func(ev string, logger Logger) {
+		{Level: zerolog.InfoLevel, Func: func(ev string, logger Logger) {
 			logger.Info(ev)
 		}},
-		stringTagTestCase{Level: zerolog.WarnLevel, Func: func(ev string, logger Logger) {
+		{Level: zerolog.WarnLevel, Func: func(ev string, logger Logger) {
 			logger.Warn(ev)
 		}},
-		stringTagTestCase{Level: zerolog.ErrorLevel, Func: func(ev string, logger Logger) {
+		{Level: zerolog.ErrorLevel, Func: func(ev string, logger Logger) {
 			logger.Error(ev)
 		}},
 	}
@@ -101,7 +130,8 @@ func TestLoggerTagsStringWithAttributesLevels(t *testing.T) {
 }
 
 func TestLoggerTagsWithEmbeddedStructs(t *testing.T) {
-	var event = EventWithEmbeddedStructs{}
+	var embeddedStruct = EmbeddedStruct{Two: timeField}
+	var event = EventWithEmbeddedStructs{EmbeddedStruct: embeddedStruct}
 	var buff = &bytes.Buffer{}
 	var c = Config{Output: buff}
 	var logger = New(c)
@@ -119,11 +149,15 @@ func TestLoggerTagsWithEmbeddedStructs(t *testing.T) {
 	require.Equal(t, "error", line["level"])
 	require.Equal(t, "testvalue", line["message"])
 	require.Equal(t, "fizz", line["one"])
+	require.Equal(t, timeField.Format(time.RFC3339Nano), line["two"])
 }
 
 func TestLoggerTagsWithNestedStructs(t *testing.T) {
 	var nestedEvent = EventWithNestedStructs{
-		Nested: EmbeddedStruct{One: "one"},
+		Nested: EmbeddedStruct{
+			One: "one",
+			Two: timeField,
+		},
 	}
 	var doubleNestedEvent = EventWithDoubleNestedStructs{
 		Nested: nestedEvent,
@@ -154,11 +188,13 @@ func TestLoggerTagsWithNestedStructs(t *testing.T) {
 	var doubleNestedStruct = doubleNested.(map[string]interface{})
 	require.Equal(t, "testvalue", doubleNestedStruct["message"])
 	require.Equal(t, "one", doubleNestedStruct["one"])
+	require.Equal(t, timeField.Format(time.RFC3339Nano), doubleNestedStruct["two"])
 }
 
 func TestLoggerTagsWithNestedEmbeddedStructs(t *testing.T) {
+	var embeddedStruct = EventWithEmbeddedStructs{EmbeddedStruct: EmbeddedStruct{Two: timeField}}
 	var nestedEvent = EventWithNestedEmbeddedStructs{
-		Nested: EventWithEmbeddedStructs{},
+		Nested: embeddedStruct,
 	}
 
 	var buff = &bytes.Buffer{}
@@ -182,5 +218,5 @@ func TestLoggerTagsWithNestedEmbeddedStructs(t *testing.T) {
 	var nestedStruct = nested.(map[string]interface{})
 	require.Equal(t, "testvalue", nestedStruct["message"])
 	require.Equal(t, "fizz", nestedStruct["one"])
-
+	require.Equal(t, timeField.Format(time.RFC3339Nano), nestedStruct["two"])
 }

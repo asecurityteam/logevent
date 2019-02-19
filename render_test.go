@@ -10,8 +10,10 @@ import (
 
 type eventNoMessage struct{}
 
-type eventMessageNoAnnotations struct {
-	Message string
+type eventDefaultNumbers struct {
+	Three   int     `logevent:"three,default=12"`
+	Four    float64 `logevent:"four,default=.5"`
+	Message string  `logevent:"message,default=testvalue"`
 }
 
 type eventMessageAnnotationsNoDefault struct {
@@ -30,37 +32,6 @@ type eventMessage struct {
 	One     string `logevent:"one,default=foo"`
 	Two     int    `logevent:"two"`
 	Message string `logevent:"message,default=testvalue"`
-}
-
-type eventDefaultNumbers struct {
-	Three   int     `logevent:"three,default=12"`
-	Four    float64 `logevent:"four,default=.5"`
-	Message string  `logevent:"message,default=testvalue"`
-}
-
-type EmbeddedStruct struct {
-	Message string `logevent:"message,default=testvalue"`
-	One     string `logevent:"one,default=foo"`
-}
-
-type EventWithEmbeddedStructs struct {
-	EmbeddedStruct
-	One string `logevent:"one,default=fizz"`
-}
-
-type EventWithNestedStructs struct {
-	Message string         `logevent:"message,default=testvalue"`
-	Nested  EmbeddedStruct `logevent:"nested"`
-}
-
-type EventWithDoubleNestedStructs struct {
-	Message string                 `logevent:"message,default=testvalue"`
-	Nested  EventWithNestedStructs `logevent:"nested"`
-}
-
-type EventWithNestedEmbeddedStructs struct {
-	Message string                   `logevent:"message,default=testvalue"`
-	Nested  EventWithEmbeddedStructs `logevent:"nested"`
 }
 
 func TestLoggerEventNoMessage(t *testing.T) {
@@ -128,20 +99,20 @@ func TestLoggerEventDefaultValues(t *testing.T) {
 	}
 
 	var cases = []defaultValueTestCase{
-		defaultValueTestCase{TestValue: int(5), StringValue: "5"},
-		defaultValueTestCase{TestValue: int8(5), StringValue: "5"},
-		defaultValueTestCase{TestValue: int16(5), StringValue: "5"},
-		defaultValueTestCase{TestValue: int32(5), StringValue: "5"},
-		defaultValueTestCase{TestValue: int64(5), StringValue: "5"},
-		defaultValueTestCase{TestValue: uint(5), StringValue: "5"},
-		defaultValueTestCase{TestValue: uint8(5), StringValue: "5"},
-		defaultValueTestCase{TestValue: uint16(5), StringValue: "5"},
-		defaultValueTestCase{TestValue: uint32(5), StringValue: "5"},
-		defaultValueTestCase{TestValue: uint64(5), StringValue: "5"},
-		defaultValueTestCase{TestValue: float32(5.5), StringValue: "5.5"},
-		defaultValueTestCase{TestValue: float64(5.5), StringValue: "5.5"},
-		defaultValueTestCase{TestValue: string("5.5"), StringValue: "5.5"},
-		defaultValueTestCase{TestValue: bool(true), StringValue: "true"},
+		{TestValue: int(5), StringValue: "5"},
+		{TestValue: int8(5), StringValue: "5"},
+		{TestValue: int16(5), StringValue: "5"},
+		{TestValue: int32(5), StringValue: "5"},
+		{TestValue: int64(5), StringValue: "5"},
+		{TestValue: uint(5), StringValue: "5"},
+		{TestValue: uint8(5), StringValue: "5"},
+		{TestValue: uint16(5), StringValue: "5"},
+		{TestValue: uint32(5), StringValue: "5"},
+		{TestValue: uint64(5), StringValue: "5"},
+		{TestValue: float32(5.5), StringValue: "5.5"},
+		{TestValue: float64(5.5), StringValue: "5.5"},
+		{TestValue: string("5.5"), StringValue: "5.5"},
+		{TestValue: bool(true), StringValue: "true"},
 	}
 	for _, testCase := range cases {
 		t.Run(fmt.Sprintf("%s", reflect.TypeOf(testCase.TestValue)), func(tt *testing.T) {

@@ -91,14 +91,20 @@ func buildAnnotations(s *structs.Struct, annotations map[string]interface{}) {
 	var strucs = []*structs.Struct{s}
 	for len(strucs) > 0 {
 		for _, field := range strucs[0].Fields() {
-			if structs.IsStruct(field.Value()) && field.IsEmbedded() {
-				strucs = append(strucs, structs.New(field.Value()))
-				continue
-			}
 			if structs.IsStruct(field.Value()) {
+				var fieldStruct = structs.New(field.Value())
+				if field.IsEmbedded() {
+					strucs = append(strucs, fieldStruct)
+					continue
+				}
+				var noExportedFields = len(fieldStruct.Map()) == 0
+				if noExportedFields {
+					addIfNotExists(annotations, getName(field), getValue(field))
+					continue
+				}
 				var subAnnotations = make(map[string]interface{})
 				addIfNotExists(annotations, getName(field), subAnnotations)
-				buildAnnotations(structs.New(field.Value()), subAnnotations)
+				buildAnnotations(fieldStruct, subAnnotations)
 			} else {
 				addIfNotExists(annotations, getName(field), getValue(field))
 			}
