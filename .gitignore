@@ -20,3 +20,4 @@ cover.out
 !.coverage/.gitkeep
 vendor/
 glide.lock
+.vscode

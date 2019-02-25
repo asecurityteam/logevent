@@ -6,7 +6,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"bitbucket.org/atlassian/logevent"
+	"github.com/asecurityteam/logevent"
 )
 
 type fixtureHandler struct {

@@ -1,11 +1,27 @@
-# logevent - A structured event logger abstraction #
+<a id="markdown-logevent---a-structured-event-logger-abstraction" name="logevent---a-structured-event-logger-abstraction"></a>
+# logevent - A structured event logger abstraction
 
-## Usage ##
+<!-- TOC -->
 
-### Defining Events ###
+- [logevent - A structured event logger abstraction](#logevent---a-structured-event-logger-abstraction)
+    - [Usage](#usage)
+        - [Defining Events](#defining-events)
+        - [Logging Events](#logging-events)
+        - [Adding Adapters](#adding-adapters)
+    - [Contributing](#contributing)
+        - [License](#license)
+        - [Contributing Agreement](#contributing-agreement)
+
+<!-- /TOC -->
+
+<a id="markdown-usage" name="usage"></a>
+## Usage
+
+<a id="markdown-defining-events" name="defining-events"></a>
+### Defining Events
 
 There are no log events defined within this project. Instead, developers
-are free to create and maintain their own events structures and schemas as
+are free to create and maintain their own events structures and schema as
 preferred. This project relies on the tag annotation feature, like JSON, to
 render an event to the log stream.
 
@@ -25,7 +41,8 @@ type UserOverLimit struct {
 }
 ```
 
-### Logging Events ###
+<a id="markdown-logging-events" name="logging-events"></a>
+### Logging Events
 
 ```golang
 logevent.FromContext(ctx).Info(myEvent{}) // Log the event
@@ -34,15 +51,19 @@ logevent.FromContext(ctx).Warn("uh oh") // Fall back to string logging if not an
 var newCtx = logevent.NewContext(context.Background(), logger.Copy())
 ```
 
-### Adding Adapters ###
+<a id="markdown-adding-adapters" name="adding-adapters"></a>
+### Adding Adapters
 
-## Contributing ##
+<a id="markdown-contributing" name="contributing"></a>
+## Contributing
 
-### License ###
+<a id="markdown-license" name="license"></a>
+### License
 
 This project is licensed under Apache 2.0. See LICENSE.txt for details.
 
-### Contributing Agreement ###
+<a id="markdown-contributing-agreement" name="contributing-agreement"></a>
+### Contributing Agreement
 
 Atlassian requires signing a contributor's agreement before we can accept a
 patch. If you are an individual you can fill out the
