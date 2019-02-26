@@ -26,7 +26,7 @@ type Config struct {
 	// Level at which to log. Defaults to DEBUG.
 	// Acceptable are ERROR, WARN, INFO, and DEBUG.
 	Level string
-	// HumanReadable toggles the JSON format off in favour of a colourised
+	// HumanReadable toggles the JSON format off in favor of a colorised
 	// log formatted for human readers.
 	HumanReadable bool
 	// Output defines to where logs are written. The default is os.Stdout.
