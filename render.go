@@ -35,13 +35,13 @@ func getDefaultValue(f *structs.Field, value string) interface{} {
 		return int32(final)
 	case reflect.Int64:
 		var final, _ = strconv.ParseInt(value, 10, 64)
-		return int64(final)
+		return final
 	case reflect.Float32:
 		var final, _ = strconv.ParseFloat(value, 32)
 		return float32(final)
 	case reflect.Float64:
 		var final, _ = strconv.ParseFloat(value, 64)
-		return float64(final)
+		return final
 	default:
 		return f.Value()
 	}

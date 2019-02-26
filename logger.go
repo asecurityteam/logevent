@@ -1,6 +1,6 @@
 package logevent
 
-// Logger is a logging system abstraction that supports levelled, strictly
+// Logger is a logging system abstraction that supports leveled, strictly
 // structured log emissions.
 type Logger interface {
 	// Debug will emit the event with level DEBUG.
