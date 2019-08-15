@@ -1,7 +1,6 @@
 package logevent
 
 import (
-	"fmt"
 	"reflect"
 	"testing"
 
@@ -115,7 +114,7 @@ func TestLoggerEventDefaultValues(t *testing.T) {
 		{TestValue: bool(true), StringValue: "true"},
 	}
 	for _, testCase := range cases {
-		t.Run(fmt.Sprintf("%s", reflect.TypeOf(testCase.TestValue)), func(tt *testing.T) {
+		t.Run(reflect.TypeOf(testCase.TestValue).String(), func(tt *testing.T) {
 			var s = structs.New(testCase)
 			var result = getDefaultValue(s.Field("TestValue"), testCase.StringValue)
 			if reflect.TypeOf(result) != reflect.TypeOf(testCase.TestValue) {
