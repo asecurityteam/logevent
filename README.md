@@ -1,6 +1,6 @@
 <a id="markdown-logevent---a-structured-event-logger-abstraction" name="logevent---a-structured-event-logger-abstraction"></a>
 # logevent - A structured event logger abstraction
-
+[![GoDoc](https://godoc.org/github.com/asecurityteam/logevent?status.svg)](https://godoc.org/github.com/asecurityteam/logevent)
 <!-- TOC -->
 
 - [logevent - A structured event logger abstraction](#logevent---a-structured-event-logger-abstraction)
