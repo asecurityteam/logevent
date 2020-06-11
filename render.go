@@ -1,9 +1,11 @@
 package logevent
 
 import (
+	"fmt"
 	"reflect"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/fatih/structs"
 )
@@ -13,6 +15,8 @@ const (
 	unknown      = "unknown"
 	defaultValue = "default="
 )
+
+var mutex = &sync.RWMutex{}
 
 func getDefaultValue(f *structs.Field, value string) interface{} {
 	switch reflect.TypeOf(f.Value()).Kind() {
@@ -87,34 +91,51 @@ func getMessage(s *structs.Struct) string {
 }
 
 func buildAnnotations(s *structs.Struct, annotations map[string]interface{}) {
+
 	s.TagName = tagKey
 	var strucs = []*structs.Struct{s}
 	for len(strucs) > 0 {
+		var wg sync.WaitGroup
+		wg.Add(len(strucs[0].Fields()))
 		for _, field := range strucs[0].Fields() {
-			if structs.IsStruct(field.Value()) {
-				var fieldStruct = structs.New(field.Value())
-				if field.IsEmbedded() {
-					strucs = append(strucs, fieldStruct)
-					continue
-				}
-				var noExportedFields = len(fieldStruct.Map()) == 0
-				if noExportedFields {
+			// we spin up go routines to best-effort add annotations, but
+			// catch panics if any attempt to get an unexported field occurs
+			go func(field *structs.Field, annotations map[string]interface{}) {
+				// if any panic occurs, we don't want to break the runtime caller, so recover
+				defer func() {
+					if err := recover(); err != nil {
+						fmt.Println(err)
+					}
+					wg.Done()
+				}()
+				if structs.IsStruct(field.Value()) {
+					var fieldStruct = structs.New(field.Value())
+					if field.IsEmbedded() {
+						strucs = append(strucs, fieldStruct)
+						return
+					}
+					var noExportedFields = len(fieldStruct.Map()) == 0
+					if noExportedFields {
+						addIfNotExists(annotations, getName(field), getValue(field))
+						return
+					}
+					var subAnnotations = make(map[string]interface{})
+					addIfNotExists(annotations, getName(field), subAnnotations)
+					buildAnnotations(fieldStruct, subAnnotations)
+				} else {
 					addIfNotExists(annotations, getName(field), getValue(field))
-					continue
 				}
-				var subAnnotations = make(map[string]interface{})
-				addIfNotExists(annotations, getName(field), subAnnotations)
-				buildAnnotations(fieldStruct, subAnnotations)
-			} else {
-				addIfNotExists(annotations, getName(field), getValue(field))
-			}
+			}(field, annotations)
 		}
+		wg.Wait()
 		strucs = strucs[1:]
 	}
 }
 
 func addIfNotExists(m map[string]interface{}, key string, value interface{}) {
+	mutex.Lock()
 	if _, ok := m[key]; !ok {
 		m[key] = value
 	}
+	mutex.Unlock()
 }
