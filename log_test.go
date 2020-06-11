@@ -44,6 +44,9 @@ type EventWithUnexportedField struct {
 	unexported string `logevent:"unexported,default=fizz"`
 }
 
+type EventWithNoField struct {
+}
+
 type tagTestCase struct {
 	Level zerolog.Level
 	Func  func(eventMessage, Logger)
@@ -254,5 +257,29 @@ func TestLoggerTagsWithUnexportedField(t *testing.T) {
 	// unexported fields should be silently omitted from the log
 	var _, okUnexported = line["unexported"]
 	require.False(t, okUnexported, "log line has nested attribute")
+
+}
+
+func TestLoggerTagsWithNoFields(t *testing.T) {
+	var eventWithNothing = EventWithNoField{}
+
+	var buff = &bytes.Buffer{}
+	var c = Config{Output: buff}
+	var logger = New(c)
+
+	logger.Error(eventWithNothing)
+
+	var lines = strings.Split(strings.Trim(buff.String(), "\n"), "\n")
+	var line = make(map[string]interface{})
+	_ = json.Unmarshal([]byte(lines[0]), &line)
+	var _, okFile = line["file"]
+	var _, okTime = line["time"]
+	require.True(t, okFile, "log line missing file attribute")
+	require.True(t, okTime, "log line missing time attribute")
+	require.Equal(t, "error", line["level"])
+	require.Equal(t, "unknown", line["message"])
+
+	var _, okExported = line["message"]
+	require.True(t, okExported, "log line missing nested attribute")
 
 }
