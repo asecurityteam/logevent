@@ -283,3 +283,27 @@ func TestLoggerTagsWithNoFields(t *testing.T) {
 	require.True(t, okExported, "log line missing nested attribute")
 
 }
+
+func TestLoggerAccidentalNil(t *testing.T) {
+	// sometimes people accidentally code `logger.Info(thing)` there thing == nil.  It happens.  Don't panic.
+
+	var buff = &bytes.Buffer{}
+	var c = Config{Output: buff}
+	var logger = New(c)
+
+	var err error
+	logger.Error(err)
+
+	var lines = strings.Split(strings.Trim(buff.String(), "\n"), "\n")
+	var line = make(map[string]interface{})
+	_ = json.Unmarshal([]byte(lines[0]), &line)
+	var _, okFile = line["file"]
+	var _, okTime = line["time"]
+	require.True(t, okFile, "log line missing file attribute")
+	require.True(t, okTime, "log line missing time attribute")
+	require.Equal(t, "error", line["level"])
+	require.Equal(t, "(nil)", line["message"])
+
+	var _, okExported = line["message"]
+	require.True(t, okExported, "log line missing nested attribute")
+}

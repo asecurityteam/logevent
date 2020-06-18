@@ -97,6 +97,9 @@ func (log *logger) emit(level zerolog.Level, event interface{}) {
 	// help with migration paths from unstructure to structured by allowing
 	// refactors to occur over time. It is **not** recommended to use this
 	// feature if the logs can be made into structs.
+	if event == nil {
+		event = "(nil)"
+	}
 	if msg, ok := event.(string); ok {
 		log.emitString(level, msg)
 		return
