@@ -75,6 +75,8 @@ func getValue(f *structs.Field) interface{} {
 	return f.Value()
 }
 
+// getMessage will render the value of the unknown const
+// if there is no Message field in the struct
 func getMessage(s *structs.Struct) string {
 	var message string
 	var msgField *structs.Field
