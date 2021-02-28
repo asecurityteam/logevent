@@ -47,6 +47,13 @@ type EventWithUnexportedField struct {
 type EventWithNoField struct {
 }
 
+type EventThatIsErrorType struct {
+}
+
+func (EventThatIsErrorType) Error() string {
+	return "hi I'm an error"
+}
+
 type tagTestCase struct {
 	Level zerolog.Level
 	Func  func(eventMessage, Logger)
@@ -260,7 +267,7 @@ func TestLoggerTagsWithUnexportedField(t *testing.T) {
 
 }
 
-func TestLoggerTagsWithNoFields(t *testing.T) {
+func TestLoggerTagsWithNoFields(t *testing.T) { // nolint
 	var eventWithNothing = EventWithNoField{}
 
 	var buff = &bytes.Buffer{}
@@ -303,6 +310,32 @@ func TestLoggerAccidentalNil(t *testing.T) {
 	require.True(t, okTime, "log line missing time attribute")
 	require.Equal(t, "error", line["level"])
 	require.Equal(t, "(nil)", line["message"])
+
+	var _, okExported = line["message"]
+	require.True(t, okExported, "log line missing nested attribute")
+}
+
+func TestLoggerFallbackToError(t *testing.T) { // nolint
+	// sometimes people log an Error type lacking a Message struct field;
+	// fallback to error.Error() function call for the message
+
+	var eventThatIsErrorType = EventThatIsErrorType{}
+
+	var buff = &bytes.Buffer{}
+	var c = Config{Output: buff}
+	var logger = New(c)
+
+	logger.Error(eventThatIsErrorType)
+
+	var lines = strings.Split(strings.Trim(buff.String(), "\n"), "\n")
+	var line = make(map[string]interface{})
+	_ = json.Unmarshal([]byte(lines[0]), &line)
+	var _, okFile = line["file"]
+	var _, okTime = line["time"]
+	require.True(t, okFile, "log line missing file attribute")
+	require.True(t, okTime, "log line missing time attribute")
+	require.Equal(t, "error", line["level"])
+	require.Equal(t, "hi I'm an error", line["message"])
 
 	var _, okExported = line["message"]
 	require.True(t, okExported, "log line missing nested attribute")

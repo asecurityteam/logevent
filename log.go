@@ -89,12 +89,19 @@ func (log *logger) emitStruct(level zerolog.Level, event interface{}) {
 
 	var message = getMessage(s)
 	delete(annotations, "message")
+	if message == unknown {
+		// struct is lacking a Message field, or Message field is "".
+		// As a last resort, see if the event is error type
+		if _, ok := event.(error); ok {
+			message = event.(error).Error()
+		}
+	}
 	log.l.WithLevel(level).Fields(annotations).Msg(message)
 }
 
 func (log *logger) emit(level zerolog.Level, event interface{}) {
 	// Fallback for string values to unstructured logging. This exists to
-	// help with migration paths from unstructure to structured by allowing
+	// help with migration paths from unstructured to structured by allowing
 	// refactors to occur over time. It is **not** recommended to use this
 	// feature if the logs can be made into structs.
 	if event == nil {
