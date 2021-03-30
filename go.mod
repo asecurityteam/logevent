@@ -8,5 +8,5 @@ require (
 	github.com/rs/xhandler v0.0.0-20170707052532-1eb70cf1520d // indirect
 	github.com/rs/xlog v0.0.0-20171227185259-131980fab91b
 	github.com/rs/zerolog v1.15.0
-	github.com/stretchr/testify v1.3.0
+	github.com/stretchr/testify v1.7.0
 )
