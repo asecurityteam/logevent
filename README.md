@@ -6,13 +6,14 @@
 <!-- TOC -->
 
 - [logevent - A structured event logger abstraction](#logevent---a-structured-event-logger-abstraction)
-    - [Usage](#usage)
-        - [Defining Events](#defining-events)
-        - [Logging Events](#logging-events)
-        - [Adding Adapters](#adding-adapters)
-    - [Contributing](#contributing)
-        - [License](#license)
-        - [Contributing Agreement](#contributing-agreement)
+  - [Usage](#usage)
+    - [Defining Events](#defining-events)
+    - [Logging Events](#logging-events)
+    - [Transaction IDs](#transaction-ids)
+    - [Adding Adapters](#adding-adapters)
+  - [Contributing](#contributing)
+    - [License](#license)
+    - [Contributing Agreement](#contributing-agreement)
 
 <!-- /TOC -->
 
@@ -51,6 +52,25 @@ logevent.FromContext(ctx).Info(myEvent{}) // Log the event
 logevent.FromContext(ctx).SetField("key", "value")
 logevent.FromContext(ctx).Warn("uh oh") // Fall back to string logging if not an event.
 var newCtx = logevent.NewContext(context.Background(), logger.Copy())
+```
+
+<a id="markdown-transaction-ids" name="transaction-ids"></a>
+### Transaction IDs
+
+You can add a `transaction_id` field to your logs by following the example below.
+Once a transaction id is set, all future logs written will automatically contain the transaction id.
+This is incredibly usefulfor tracing requests through a microservice and/or across multiple microservices.
+Note: if the `transactionID` parameter is left empty, a uuid will be randomly generated for you.
+```golang
+logger := logevent.New(logevent.Config{Level: "INFO"})
+ctx := logevent.NewContext(context.Background(), logger)
+logevent.SetTransactionID(ctx, &logger, "1234")
+```
+
+
+To retrieve a previously set transaction id, follow this example:
+```golang
+txid := logevent.GetTransactionID(ctx)
 ```
 
 <a id="markdown-adding-adapters" name="adding-adapters"></a>
