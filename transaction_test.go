@@ -31,6 +31,12 @@ func TestSetAndGetTransactionID(t *testing.T) {
 			expectedTxid: "1234",
 		},
 		{
+			name:         "Txid overwritten with new value",
+			ctx:          context.WithValue(context.Background(), transactionIDContextKey, "1234"),
+			txid:         "abcd",
+			expectedTxid: "abcd",
+		},
+		{
 			name:         "Txid passed in",
 			ctx:          context.Background(),
 			txid:         "abcd",
@@ -57,4 +63,28 @@ func TestSetAndGetTransactionID(t *testing.T) {
 			assert.Contains(t, buf.String(), txid)
 		})
 	}
+}
+
+func TestOverwriteTransactionID(t *testing.T) {
+
+	ctx := context.Background()
+	txid1 := "abcd"
+	txid2 := "1234"
+
+	buf := &bytes.Buffer{}
+	logger := New(Config{Output: buf})
+
+	ctx = SetTransactionID(ctx, &logger, txid1)
+	assert.Equal(t, txid1, GetTransactionID(ctx))
+	logger.Info("Some log statement")
+	assert.Contains(t, buf.String(), txid1, "Log statement: "+buf.String())
+	assert.NotContains(t, buf.String(), txid2, "Log statement: "+buf.String())
+
+	buf.Reset()
+
+	ctx = SetTransactionID(ctx, &logger, txid2)
+	assert.Equal(t, txid2, GetTransactionID(ctx))
+	logger.Info("Some log statement")
+	assert.Contains(t, buf.String(), txid2, "Log statement: "+buf.String())
+	assert.NotContains(t, buf.String(), txid1, "Log statement: "+buf.String())
 }
