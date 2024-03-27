@@ -43,7 +43,8 @@ func TestSetAndGetTransactionID(t *testing.T) {
 
 			buf := &bytes.Buffer{}
 			currentCase.logger = New(Config{Output: buf})
-
+			// this will be fixed with switch to https://tip.golang.org/doc/go1.22 with new variables per loop iteration
+			// #nosec G601
 			ctx := SetTransactionID(currentCase.ctx, &currentCase.logger, currentCase.txid)
 			txid := GetTransactionID(ctx)
 

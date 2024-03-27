@@ -7,8 +7,9 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/asecurityteam/logevent"
 	"github.com/stretchr/testify/assert"
+
+	"github.com/asecurityteam/logevent"
 )
 
 type instanceStoreTransport struct {
