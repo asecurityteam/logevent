@@ -1,8 +1,6 @@
 <a id="markdown-logevent---a-structured-event-logger-abstraction" name="logevent---a-structured-event-logger-abstraction"></a>
 # logevent - A structured event logger abstraction
 [![GoDoc](https://godoc.org/github.com/asecurityteam/logevent?status.svg)](https://godoc.org/github.com/asecurityteam/logevent)
-[![Build Status](https://travis-ci.com/asecurityteam/logevent.png?branch=master)](https://travis-ci.com/asecurityteam/logevent)
-[![codecov.io](https://codecov.io/github/asecurityteam/logevent/coverage.svg?branch=master)](https://codecov.io/github/asecurityteam/logevent?branch=master)
 <!-- TOC -->
 
 - [logevent - A structured event logger abstraction](#logevent---a-structured-event-logger-abstraction)
