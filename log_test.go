@@ -75,7 +75,7 @@ func TestLoggerTagsWithEventAttributesLevels(t *testing.T) {
 		}},
 	}
 	for _, currentCase := range cases {
-		t.Run(string(currentCase.Level), func(tb *testing.T) {
+		t.Run(string(rune(currentCase.Level)), func(tb *testing.T) {
 			var event = eventMessage{One: "one", Two: 2, Message: "testmessage"}
 			var buff = &bytes.Buffer{}
 			var c = Config{Output: buff}
@@ -121,7 +121,7 @@ func TestLoggerTagsStringWithAttributesLevels(t *testing.T) {
 		}},
 	}
 	for _, currentCase := range cases {
-		t.Run(string(currentCase.Level), func(tb *testing.T) {
+		t.Run(string(rune(currentCase.Level)), func(tb *testing.T) {
 			var event = "testmessage"
 			var buff = &bytes.Buffer{}
 			var c = Config{Output: buff}
