@@ -9,7 +9,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/asecurityteam/logevent"
+	"github.com/asecurityteam/logevent/v2"
 )
 
 type instanceStoreTransport struct {
