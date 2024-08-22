@@ -3,7 +3,7 @@ package http
 import (
 	"net/http"
 
-	"github.com/asecurityteam/logevent"
+	"github.com/asecurityteam/logevent/v2"
 )
 
 // Transport injects a `logevent.Logger` into the request context

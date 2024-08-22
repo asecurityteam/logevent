@@ -3,7 +3,7 @@ package http
 import (
 	"net/http"
 
-	"github.com/asecurityteam/logevent"
+	"github.com/asecurityteam/logevent/v2"
 )
 
 // Middleware wraps an http.Handler and injects a logevent.Logger in to the

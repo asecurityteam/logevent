@@ -1,4 +1,4 @@
-module github.com/asecurityteam/logevent
+module github.com/asecurityteam/logevent/v2
 
 go 1.22
 
