@@ -1,6 +1,20 @@
 <a id="markdown-logevent---a-structured-event-logger-abstraction" name="logevent---a-structured-event-logger-abstraction"></a>
 # logevent - A structured event logger abstraction
 [![GoDoc](https://godoc.org/github.com/asecurityteam/logevent?status.svg)](https://godoc.org/github.com/asecurityteam/logevent)
+
+
+[![Bugs](https://sonarcloud.io/api/project_badges/measure?project=asecurityteam_logevent&metric=bugs)](https://sonarcloud.io/dashboard?id=asecurityteam_logevent)
+[![Code Smells](https://sonarcloud.io/api/project_badges/measure?project=asecurityteam_logevent&metric=code_smells)](https://sonarcloud.io/dashboard?id=asecurityteam_logevent)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=asecurityteam_logevent&metric=coverage)](https://sonarcloud.io/dashboard?id=asecurityteam_logevent)
+[![Duplicated Lines (%)](https://sonarcloud.io/api/project_badges/measure?project=asecurityteam_logevent&metric=duplicated_lines_density)](https://sonarcloud.io/dashboard?id=asecurityteam_logevent)
+[![Lines of Code](https://sonarcloud.io/api/project_badges/measure?project=asecurityteam_logevent&metric=ncloc)](https://sonarcloud.io/dashboard?id=asecurityteam_logevent)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=asecurityteam_logevent&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=asecurityteam_logevent)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=asecurityteam_logevent&metric=alert_status)](https://sonarcloud.io/dashboard?id=asecurityteam_logevent)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=asecurityteam_logevent&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=asecurityteam_logevent)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=asecurityteam_logevent&metric=security_rating)](https://sonarcloud.io/dashboard?id=asecurityteam_logevent)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=asecurityteam_logevent&metric=sqale_index)](https://sonarcloud.io/dashboard?id=asecurityteam_logevent)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=asecurityteam_logevent&metric=vulnerabilities)](https://sonarcloud.io/dashboard?id=asecurityteam_logevent)
+
 <!-- TOC -->
 
 - [logevent - A structured event logger abstraction](#logevent---a-structured-event-logger-abstraction)
