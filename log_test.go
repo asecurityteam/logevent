@@ -3,11 +3,11 @@ package logevent
 import (
 	"bytes"
 	"encoding/json"
+	"log/slog"
 	"strings"
 	"testing"
 	"time"
 
-	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/require"
 )
 
@@ -55,27 +55,27 @@ func (EventThatIsErrorType) Error() string {
 }
 
 type tagTestCase struct {
-	Level zerolog.Level
+	Level slog.Leveler
 	Func  func(eventMessage, Logger)
 }
 
 func TestLoggerTagsWithEventAttributesLevels(t *testing.T) {
 	var cases = []tagTestCase{
-		{Level: zerolog.DebugLevel, Func: func(ev eventMessage, logger Logger) {
+		{Level: slog.LevelDebug, Func: func(ev eventMessage, logger Logger) {
 			logger.Debug(ev)
 		}},
-		{Level: zerolog.InfoLevel, Func: func(ev eventMessage, logger Logger) {
+		{Level: slog.LevelInfo, Func: func(ev eventMessage, logger Logger) {
 			logger.Info(ev)
 		}},
-		{Level: zerolog.WarnLevel, Func: func(ev eventMessage, logger Logger) {
+		{Level: slog.LevelWarn, Func: func(ev eventMessage, logger Logger) {
 			logger.Warn(ev)
 		}},
-		{Level: zerolog.ErrorLevel, Func: func(ev eventMessage, logger Logger) {
+		{Level: slog.LevelError, Func: func(ev eventMessage, logger Logger) {
 			logger.Error(ev)
 		}},
 	}
 	for _, currentCase := range cases {
-		t.Run(string(rune(currentCase.Level)), func(tb *testing.T) {
+		t.Run(currentCase.Level.Level().String(), func(tb *testing.T) {
 			var event = eventMessage{One: "one", Two: 2, Message: "testmessage"}
 			var buff = &bytes.Buffer{}
 			var c = Config{Output: buff}
@@ -101,22 +101,22 @@ func TestLoggerTagsWithEventAttributesLevels(t *testing.T) {
 }
 
 type stringTagTestCase struct {
-	Level zerolog.Level
+	Level slog.Level
 	Func  func(string, Logger)
 }
 
 func TestLoggerTagsStringWithAttributesLevels(t *testing.T) {
 	var cases = []stringTagTestCase{
-		{Level: zerolog.DebugLevel, Func: func(ev string, logger Logger) {
+		{Level: slog.LevelDebug, Func: func(ev string, logger Logger) {
 			logger.Debug(ev)
 		}},
-		{Level: zerolog.InfoLevel, Func: func(ev string, logger Logger) {
+		{Level: slog.LevelInfo, Func: func(ev string, logger Logger) {
 			logger.Info(ev)
 		}},
-		{Level: zerolog.WarnLevel, Func: func(ev string, logger Logger) {
+		{Level: slog.LevelWarn, Func: func(ev string, logger Logger) {
 			logger.Warn(ev)
 		}},
-		{Level: zerolog.ErrorLevel, Func: func(ev string, logger Logger) {
+		{Level: slog.LevelError, Func: func(ev string, logger Logger) {
 			logger.Error(ev)
 		}},
 	}
