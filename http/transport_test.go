@@ -2,7 +2,7 @@ package http
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -20,12 +20,12 @@ func (t *instanceStoreTransport) RoundTrip(r *http.Request) (*http.Response, err
 	t.instance = FromRequest(r)
 	return &http.Response{
 		StatusCode: 200,
-		Body:       ioutil.NopCloser(bytes.NewBufferString(``)),
+		Body:       io.NopCloser(bytes.NewBufferString(``)),
 	}, nil
 }
 
 func TestNewTransport(t *testing.T) {
-	logger := logevent.New(logevent.Config{Level: "INFO", Output: ioutil.Discard})
+	logger := logevent.New(logevent.Config{Level: "INFO", Output: io.Discard})
 	wrapped := &instanceStoreTransport{}
 	transport := NewTransport(logger)(wrapped)
 	_, _ = transport.RoundTrip(httptest.NewRequest(http.MethodGet, "/", nil))
