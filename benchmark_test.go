@@ -2,7 +2,7 @@ package logevent
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"testing"
 )
 
@@ -19,7 +19,7 @@ func BenchmarkLog(b *testing.B) {
 		var name = fmt.Sprintf("depth=%d", depth)
 		b.Run(name, func(b *testing.B) {
 			var event = buildEvent(depth)
-			var logger = New(Config{Output: ioutil.Discard})
+			var logger = New(Config{Output: io.Discard})
 			b.ResetTimer()
 			for i := 0; i < b.N; i++ {
 				logger.Error(*event)

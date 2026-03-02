@@ -1,7 +1,7 @@
 package http
 
 import (
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -19,7 +19,7 @@ func (h *fixtureHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func TestMiddleware(t *testing.T) {
 	var wrapped = &fixtureHandler{}
-	var logger = logevent.New(logevent.Config{Level: "INFO", Output: ioutil.Discard})
+	var logger = logevent.New(logevent.Config{Level: "INFO", Output: io.Discard})
 	var m = NewMiddleware(logger)
 	var h = m(wrapped)
 	var w = httptest.NewRecorder()
